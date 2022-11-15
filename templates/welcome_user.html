@@ -32,8 +32,8 @@
             });
             
             // Socket.IO get message
-            socket.on('get', function (data) {
-                $('#chat_content').append('<p>'+ user +' say: ' + data + '</p>');
+            socket.on('get', function (client) {
+                $('#chat_content').append('<p>'+ client.name +' say: ' + client.message + '</p>');
             });
 
             // Socket.IO send test

@@ -59,16 +59,16 @@ def welcome_user():
     return render_template('welcome_user.html',user=current_user)
 
 @socketio.on('send')
-def chat(data):
-    socketio.emit('get', data)
+def chat(message):
+    socketio.emit('get', { "message": message, "name": current_user.username})
 
 @socketio.on('text')
 def test():
     socketio.send("test")
 
 
-
 if __name__ == '__main__':
-    db.create_all()
+    with app.app_context():
+        db.create_all()
     socketio.run(app, debug=True)
     # app.run(debug=True)
