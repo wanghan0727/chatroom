@@ -10,6 +10,17 @@ from flask_socketio import SocketIO
 from flask import Flask, render_template, Response
 import cv2
 
+###upload test###
+UPLOAD_FOLDER = './upload'
+ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+###upload test###
+
 socketio = SocketIO(app)
 camera = cv2.VideoCapture(0)
 
@@ -61,11 +72,27 @@ def register():
     return render_template('register.html',form=form)
 
 
-@app.route('/welcome')
+@app.route('/welcome', methods=['GET', 'POST'])
 @login_required
-def welcome_user():
-    return render_template('welcome_user.html',user=current_user)
+# def welcome_user():
+#     return render_template('welcome_user.html',user=current_user)
 
+
+def welcome_user():  #upload_file
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], 
+                                   filename))
+            return render_template('welcome_user.html',user=current_user, filename=filename)
+    return render_template('welcome_user.html', user=current_user)
+
+@app.route('/welcome/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+    
 @socketio.on('send')
 def chat(message):
     socketio.emit('get', { "message": message, "name": current_user.username})
